@@ -54,7 +54,7 @@ def get_abc_price(driver):
         buy_by_section = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.scope-buy-by"))
         )
-        time.sleep(2)  # Additional wait to ensure content is fully loaded
+        time.sleep(20)  # Additional wait to ensure content is fully loaded
 
         # Extract the price using JavaScript or Selenium's find methods
         # # Method 1: Using Selenium's find_element
