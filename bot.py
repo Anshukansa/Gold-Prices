@@ -169,7 +169,7 @@ def retry_get_prices():
     message = f"📊 Final Update - {current_time}\n\n"
     
     if abc_price:
-        message += f"ABC Bullion: ${abc_price}\n"
+        message += f"ABC Bullion: ${abc_price} $(10*{abc_price})/37.5\n"
     else:
         message += "ABC Bullion: Price unavailable after maximum retries\n"
         
