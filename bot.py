@@ -167,9 +167,11 @@ def retry_get_prices():
     # Send final update if we have any new information
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"📊 Final Update - {current_time}\n\n"
-    
+    abc_price1 = (10 * abc_price) / 37.5
+    abc_price2 = abc_price1 * 55
+
     if abc_price:
-        message += f"ABC Bullion: ${abc_price} $(10*{abc_price})/37.5\n"
+        message += f"ABC Bullion: ${abc_price} 10 Gram: ${abc_price1} & Rs.{abc_price2}\n"
     else:
         message += "ABC Bullion: Price unavailable after maximum retries\n"
         
