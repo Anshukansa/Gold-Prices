@@ -167,7 +167,7 @@ def retry_get_prices():
     # Send final update if we have any new information
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"📊 Final Update - {current_time}\n\n"
-    abc_price1 = (10 * float(abc_price) / 37.5
+    abc_price1 = (10 * float(abc_price) / 37.5)
     abc_price2 = abc_price1 * 55
 
     if abc_price:
