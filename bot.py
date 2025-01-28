@@ -163,7 +163,7 @@ def retry_get_prices():
         # Calculate additional prices with two decimal places
         abc_price1 = round((10 * abc_price) / 37.5, 2)
         abc_price2 = round(abc_price1 * 55, 2)
-        message += f"ABC Bullion: ${abc_price:.2f} | 10 Gram: ${abc_price1:.2f} & Rs.{abc_price2:.2f}\n"
+        message += f"ABC Bullion: ${abc_price:.2f} \n 10 Gram: ${abc_price1:.2f} & Rs.{abc_price2:.2f}\n"
     else:
         message += "ABC Bullion: Price unavailable after maximum retries\n"
         
@@ -185,9 +185,9 @@ def retry_get_prices():
             comparison = "ABC Bullion and Aarav Bullion have the same price."
         
         if diff != 0:
-            message += f"Difference: Rs.{diff:.2f} ({comparison} Rs.{diff:.2f})\n"
+            message += f"Difference: Rs.{diff:.2f})\n"
         else:
-            message += f"Difference: Rs.{diff:.2f} ({comparison})\n"
+            message += f"Difference: Rs.{diff:.2f}\n"
     
     send_message_to_subscribers(bot, message)
 
