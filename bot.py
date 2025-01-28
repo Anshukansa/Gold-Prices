@@ -56,18 +56,17 @@ def get_abc_price(driver):
         )
         time.sleep(2)  # Additional wait to ensure content is fully loaded
 
-        # Extract the price using JavaScript or Selenium's find methods
-        # # Method 1: Using Selenium's find_element
-        # price_element = buy_by_section.find_element(By.CSS_SELECTOR, "p.price-container span.price")
-        # price = price_element.text.strip()
-        
-        # Alternatively, Method 2: Using JavaScript execution
+        # Extract the price using JavaScript
         script = """
         return document.querySelector("div.scope-buy-by p.price-container span.price").innerText.trim();
         """
-        price = driver.execute_script(script)
+        price_text = driver.execute_script(script)
         
-        logger.info(f"Successfully got ABC Bullion price: {price}")
+        # Convert price to float with two decimals
+        price = float(price_text.replace(',', '').replace('$', ''))
+        price = round(price, 2)
+        
+        logger.info(f"Successfully got ABC Bullion price: {price:.2f}")
         return price
     except Exception as e:
         logger.error(f"Error getting ABC Bullion price: {e}")
@@ -91,8 +90,13 @@ def get_aarav_price(driver):
         });
         return data[0];
         """
-        price = driver.execute_script(script)
-        logger.info(f"Successfully got Aarav Bullion price: {price}")
+        price_text = driver.execute_script(script)
+        
+        # Convert price to float with two decimals
+        price = float(price_text.replace(',', '').replace('Rs.', ''))
+        price = round(price, 2)
+        
+        logger.info(f"Successfully got Aarav Bullion price: {price:.2f}")
         return price
     except Exception as e:
         logger.error(f"Error getting Aarav price: {e}")
@@ -135,26 +139,26 @@ def retry_get_prices():
                 if abc_price and aarav_price is None:
                     # If we got ABC but not Aarav, send partial update
                     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    message = (
-                        f"📊 Partial Update - {current_time}\n\n"
-                        f"ABC Bullion: ${abc_price}\n"
-                        f"(Still trying to get Aarav Bullion price...)"
-                    )
-                    send_message_to_subscribers(bot, message)
+                    # message = (
+                    #     f"📊 Partial Update - {current_time}\n\n"
+                    #     f"ABC Bullion: ${abc_price:.2f}\n"
+                    #     f"(Still trying to get Aarav Bullion price...)"
+                    # )
+                    # send_message_to_subscribers(bot, message)
 
             # Try to get Aarav price if we don't have it yet
-            if aarav_price is None and aarav_attempts < MAX_RETRIES:
-                aarav_price = get_aarav_price(driver)
-                aarav_attempts += 1
-                if aarav_price and abc_price is None:
-                    # If we got Aarav but not ABC, send partial update
-                    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    message = (
-                        f"📊 Partial Update - {current_time}\n\n"
-                        f"Aarav Bullion: Rs.{aarav_price}\n"
-                        f"(Still trying to get ABC Bullion price...)"
-                    )
-                    send_message_to_subscribers(bot, message)
+            # if aarav_price is None and aarav_attempts < MAX_RETRIES:
+            #     aarav_price = get_aarav_price(driver)
+            #     aarav_attempts += 1
+            #     if aarav_price and abc_price is None:
+            #         # If we got Aarav but not ABC, send partial update
+            #         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            #         message = (
+            #             f"📊 Partial Update - {current_time}\n\n"
+            #             f"Aarav Bullion: Rs.{aarav_price:.2f}\n"
+            #             f"(Still trying to get ABC Bullion price...)"
+            #         )
+            #         send_message_to_subscribers(bot, message)
 
         finally:
             driver.quit()
@@ -167,17 +171,17 @@ def retry_get_prices():
     # Send final update if we have any new information
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"📊 Final Update - {current_time}\n\n"
-    abc_price_cleaned = abc_price.replace(",", "")
-    abc_price1 = (10 * float(abc_price_cleaned) / 37.5)
-    abc_price2 = abc_price1 * 55
-
-    if abc_price:
-        message += f"ABC Bullion: ${abc_price} 10 Gram: ${abc_price1} & Rs.{abc_price2}\n"
+    
+    if abc_price is not None:
+        # Calculate additional prices with two decimal places
+        abc_price1 = round((10 * abc_price) / 37.5, 2)
+        abc_price2 = round(abc_price1 * 55, 2)
+        message += f"ABC Bullion: ${abc_price:.2f} | 10 Gram: ${abc_price1:.2f} & Rs.{abc_price2:.2f}\n"
     else:
         message += "ABC Bullion: Price unavailable after maximum retries\n"
         
-    if aarav_price:
-        message += f"Aarav Bullion: Rs.{aarav_price}\n"
+    if aarav_price is not None:
+        message += f"Aarav Bullion: Rs.{aarav_price:.2f}\n"
     else:
         message += "Aarav Bullion: Price unavailable after maximum retries\n"
 
