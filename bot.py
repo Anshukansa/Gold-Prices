@@ -154,6 +154,11 @@ def retry_get_prices():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"📊 Final Update - {current_time}\n\n"
     
+    # Initialize variables to hold calculated prices
+    abc_price1 = None
+    abc_price2 = None
+    diff = None
+
     if abc_price is not None:
         # Calculate additional prices with two decimal places
         abc_price1 = round((10 * abc_price) / 37.5, 2)
@@ -166,7 +171,24 @@ def retry_get_prices():
         message += f"Aarav Bullion: Rs.{aarav_price:.2f}\n"
     else:
         message += "Aarav Bullion: Price unavailable after maximum retries\n"
-
+    
+    # Calculate and include the difference if both prices are available
+    if abc_price2 is not None and aarav_price is not None:
+        diff = round(abc_price2 - aarav_price, 2)
+        # Determine if ABC is more expensive or cheaper
+        if diff > 0:
+            comparison = "ABC Bullion is more expensive than Aarav Bullion by"
+        elif diff < 0:
+            comparison = "Aarav Bullion is more expensive than ABC Bullion by"
+            diff = abs(diff)  # Make difference positive for display
+        else:
+            comparison = "ABC Bullion and Aarav Bullion have the same price."
+        
+        if diff != 0:
+            message += f"Difference: Rs.{diff:.2f} ({comparison} Rs.{diff:.2f})\n"
+        else:
+            message += f"Difference: Rs.{diff:.2f} ({comparison})\n"
+    
     send_message_to_subscribers(bot, message)
 
 if __name__ == "__main__":
