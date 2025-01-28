@@ -113,7 +113,7 @@ def send_message_to_subscribers(bot, message):
             logger.error(f"Failed to send message to user {user_id}: {e}")
 
 def retry_get_prices():
-    """Main function to get prices with retries and send updates."""
+    """Main function to get prices with retries and send a single update."""
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:
         raise ValueError("TELEGRAM_BOT_TOKEN not set!")
@@ -136,39 +136,21 @@ def retry_get_prices():
             if abc_price is None and abc_attempts < MAX_RETRIES:
                 abc_price = get_abc_price(driver)
                 abc_attempts += 1
-                if abc_price and aarav_price is None:
-                    # If we got ABC but not Aarav, send partial update
-                    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    # message = (
-                    #     f"📊 Partial Update - {current_time}\n\n"
-                    #     f"ABC Bullion: ${abc_price:.2f}\n"
-                    #     f"(Still trying to get Aarav Bullion price...)"
-                    # )
-                    # send_message_to_subscribers(bot, message)
 
             # Try to get Aarav price if we don't have it yet
-            # if aarav_price is None and aarav_attempts < MAX_RETRIES:
-            #     aarav_price = get_aarav_price(driver)
-            #     aarav_attempts += 1
-            #     if aarav_price and abc_price is None:
-            #         # If we got Aarav but not ABC, send partial update
-            #         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            #         message = (
-            #             f"📊 Partial Update - {current_time}\n\n"
-            #             f"Aarav Bullion: Rs.{aarav_price:.2f}\n"
-            #             f"(Still trying to get ABC Bullion price...)"
-            #         )
-            #         send_message_to_subscribers(bot, message)
+            if aarav_price is None and aarav_attempts < MAX_RETRIES:
+                aarav_price = get_aarav_price(driver)
+                aarav_attempts += 1
 
         finally:
             driver.quit()
 
         # If we don't have both prices yet, wait before retrying
         if abc_price is None or aarav_price is None:
-            logger.info(f"Waiting {RETRY_DELAY} seconds before retrying...")
+            logger.info(f"Prices not fully retrieved. Waiting {RETRY_DELAY} seconds before retrying...")
             time.sleep(RETRY_DELAY)
 
-    # Send final update if we have any new information
+    # Prepare the final message
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     message = f"📊 Final Update - {current_time}\n\n"
     
