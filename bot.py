@@ -29,19 +29,13 @@ MAX_RETRIES = 50
 RETRY_DELAY = 10  # seconds between retries
 
 def setup_driver():
-    """Sets up a lightweight Selenium WebDriver with headless Chrome."""
+    """Sets up the Selenium WebDriver with headless Chrome."""
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Lightweight optimizations for Heroku
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--window-size=800,600")  # Smaller window size
-    chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # Disable images
-    
+
     chrome_binary_path = os.environ.get("GOOGLE_CHROME_BIN", "/usr/bin/google-chrome")
     chromedriver_path = os.environ.get("CHROMEDRIVER_PATH", "/usr/local/bin/chromedriver")
     
@@ -60,8 +54,9 @@ def get_abc_price(driver):
         buy_by_section = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.scope-buy-by"))
         )
-        
-        # Extract the price using JavaScript (faster than parsing DOM)
+        time.sleep(2)  # Additional wait to ensure content is fully loaded
+
+        # Extract the price using JavaScript
         script = """
         return document.querySelector("div.scope-buy-by p.price-container span.price").innerText.trim();
         """
@@ -85,6 +80,7 @@ def get_aarav_price(driver):
         swiper = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.swiper-container.s1"))
         )
+        time.sleep(2)
         
         script = """
         const data = [];
@@ -133,10 +129,9 @@ def retry_get_prices():
     abc_attempts = 0
     aarav_attempts = 0
     
-    # Create a single WebDriver instance for all attempts (major optimization)
-    driver = setup_driver()
-    try:
-        while (abc_price is None or aarav_price is None) and (abc_attempts < MAX_RETRIES or aarav_attempts < MAX_RETRIES):
+    while (abc_price is None or aarav_price is None) and (abc_attempts < MAX_RETRIES or aarav_attempts < MAX_RETRIES):
+        driver = setup_driver()
+        try:
             # Try to get ABC price if we don't have it yet
             if abc_price is None and abc_attempts < MAX_RETRIES:
                 abc_price = get_abc_price(driver)
@@ -147,13 +142,13 @@ def retry_get_prices():
                 aarav_price = get_aarav_price(driver)
                 aarav_attempts += 1
 
-            # If we don't have both prices yet, wait before retrying
-            if abc_price is None or aarav_price is None:
-                logger.info(f"Prices not fully retrieved. Waiting {RETRY_DELAY} seconds before retrying...")
-                time.sleep(RETRY_DELAY)
-    finally:
-        # Always close the driver when done to free resources
-        driver.quit()
+        finally:
+            driver.quit()
+
+        # If we don't have both prices yet, wait before retrying
+        if abc_price is None or aarav_price is None:
+            logger.info(f"Prices not fully retrieved. Waiting {RETRY_DELAY} seconds before retrying...")
+            time.sleep(RETRY_DELAY)
 
     # Prepare the final message
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
