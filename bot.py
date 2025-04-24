@@ -53,7 +53,7 @@ def setup_driver():
 def get_abc_price(driver):
     """Gets price from ABC Bullion."""
     try:
-        driver.get("https://www.abcbullion.com.au/store/gabgtael375g-abc-bullion-tael-cast-bar")
+        driver.get("https://www.abcbullion.com.au/store/gold/gabgtaeltael-abc-gold-375gram-9999")
         wait = WebDriverWait(driver, 15)
         
         # Wait until the 'scope-buy-by' div is present
